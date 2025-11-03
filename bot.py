@@ -1,3 +1,4 @@
+from handlers import select_cafe  # <-- ADD THIS LINE
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
