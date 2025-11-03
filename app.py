@@ -2,8 +2,7 @@
 import os
 import asyncio
 from flask import Flask
-from bot import application  # Your Telegram bot app
-
+from bot import Application as application  # ← Grab the real one!
 app = Flask(__name__)
 
 # Webhook route (for future)
