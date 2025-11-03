@@ -1,24 +1,30 @@
-from flask import Flask, request
-from bot import setup_bot, webhook_handler
+# app.py
 import os
+import asyncio
+from flask import Flask
+from bot import application  # Your Telegram bot app
 
 app = Flask(__name__)
 
-# Initialize bot
-application = setup_bot()
+# Webhook route (for future)
+@app.post("/webhook")
+async def webhook():
+    # Optional: Add secret token check later
+    update = await request.json()
+    await application.process_update(Update.de_json(update, application.bot))
+    return "OK"
 
-@app.route('/')
-def home():
-    return "Campus Delivery Bot is running! 🚀"
+# Health check
+@app.get("/")
+def index():
+    return "Bot is alive! 🚀"
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    return webhook_handler(request)
+# <<< ADD THIS: Start polling in background >>>
+def run_polling():
+    asyncio.run(application.run_polling())
 
-@app.route('/health')
-def health_check():
-    return {"status": "healthy", "message": "Bot is running"}
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    # For Render: Start polling in a thread + Flask
+    from threading import Thread
+    Thread(target=run_polling, daemon=True).start()
+    app.run(host="0.0.0.0", port=os.environ.get("PORT", 5000))
