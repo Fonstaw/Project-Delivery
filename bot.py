@@ -1,4 +1,3 @@
-from handlers import select_cafe  # <-- ADD THIS LINE
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -143,7 +142,7 @@ async def handle_single_user(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "✅ሲንግል order በ Bot coming soon!!\n"
         "✅እስከዛ በዚ @campusdeliveryy ይዘዙ!\n"
         "☎️ስልክ: 0923889620 ይደውሉ\n"
-        "        0964180001 ይደውሉ"
+        "                0964180001 ይደውሉ"
     )
     
     if update.callback_query:
@@ -154,7 +153,7 @@ async def handle_single_user(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def show_cafe_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show cafe selection menu"""
     intro_text = (
-        "🍝እባኮ የምርጫዎን ካፌ ከስር ይምረጡ!!\n"
+        "🍝እባኮ የምርጫዎን ካፌ ከስር  ይምረጁ!!\n"
         "⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️"
     )
     
@@ -176,7 +175,7 @@ async def show_cafe_selection(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     return SELECTING_USER_TYPE
 
-async def handle_cafe_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def select_cafe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle cafe selection"""
     query = update.callback_query
     await query.answer()
@@ -185,6 +184,10 @@ async def handle_cafe_selection(update: Update, context: ContextTypes.DEFAULT_TY
     context.user_data[CAFE] = cafe
     
     return await show_ordering_page(update, context, cafe)
+
+async def handle_cafe_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle cafe selection (alias for select_cafe)"""
+    return await select_cafe(update, context)
 
 async def custom_cafe_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask for custom cafe name"""
@@ -281,7 +284,7 @@ async def handle_food(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not success:
         await update.message.reply_text(
-            "❎እባኮ የምግቡን መጠን በ አሀዝ(1-9) ያካቱ\n"
+            "❎እባኮ የምግቡን መጠን በ አሀዝ(1-9) ያካትቱ\n"
             "✅ምሳሌ:1 አይነት እና 1አትክልት"
         )
         return FOOD
@@ -401,8 +404,6 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not db.is_user_authorized(user_id):
         await update.message.reply_text(
             "❎ይህን ቦት ለመጠቀም አስቀድመው ይመዝገቡ!!"
-            "🛡ለመመዝገብ @campusdeliveryy ያናግሩ!!"
-            "☎️በዚ ስልክ ይደውሉ 0964180001!"
         )
         return
     
