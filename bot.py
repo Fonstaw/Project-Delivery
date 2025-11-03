@@ -494,10 +494,3 @@ def run_polling():
     application = setup_bot()
     application.run_polling()
 
-if __name__ == "__main__":
-    # For local testing
-    import asyncio
-    asyncio.run(application.run_polling())
-    
-    # For Render webhook (keep this too)
-    # app.run(port=os.environ.get('PORT', 5000))
