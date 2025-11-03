@@ -1,7 +1,8 @@
 python-telegram-bot==20.7
 python-dotenv==1.0.0
-supabase==2.3.1
+supabase==1.0.3  # Downgraded to stable version
 python-dateutil==2.8.2
 flask==2.3.3
 gunicorn==21.2.0
 requests==2.31.0
+httpx==0.24.1  # Specific compatible version
