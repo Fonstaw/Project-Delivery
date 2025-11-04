@@ -6,7 +6,8 @@ from telegram.ext import (
 )
 from flask import request
 import config
-from database import db
+from database import Database
+db = Database()
 from utils import extract_numbers_from_text, validate_place_input, get_channel_for_order, format_order_preview
 from datetime import datetime
 
