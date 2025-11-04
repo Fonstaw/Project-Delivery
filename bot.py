@@ -427,7 +427,7 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         fund = float(context.args[1])
         success, error_msg = db.add_user(telegram_id, f"User_{telegram_id}", fund)
         
-        if success
+        if success:
             await update.message.reply_text(f"✅ተጠቃሚ {telegram_id} በ {fund} ETB ተጨምሯል።")
         else:
             
