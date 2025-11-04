@@ -153,7 +153,7 @@ async def handle_single_user(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def show_cafe_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show cafe selection menu"""
     intro_text = (
-        "🍝እባኮ የምርጫዎን ካፌ ከስር  ይምረጁ!!\n"
+        "🍝እባኮ የምርጫዎን ካፌ ከስር  ይምረጡ!!\n"
         "⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️"
     )
     
@@ -426,12 +426,18 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         telegram_id = int(context.args[0])
         fund = float(context.args[1])
         
-        if db.add_user(telegram_id, f"User_{telegram_id}", fund):
+                success, error_msg = db.add_user(telegram_id, f"User_{telegram_id}", fund)
+        if success
             await update.message.reply_text(f"✅ተጠቃሚ {telegram_id} በ {fund} ETB ተጨምሯል።")
         else:
-            await update.message.reply_text("❎ተጠቃሚን ማክበር አልተቻለም።")
+            
+            # Provide more detailed error message
+            if "duplicate" in error_msg.lower() or "unique" in error_msg.lower():
+                await update.message.reply_text(f"❎ተጠቃሚ {telegram_id} ቀደም ብሎ ተጨምሯል። (User already exists)")
+            else:
+                await update.message.reply_text(f"❎ተጠቃሚን ማክበር አልተቻለም።\nError: {error_msg}")
     except ValueError:
-        await update.message.reply_text("❎ትክክለኛ ያልሆነ ቁጥር።")
+        await update.message.reply_text("❎ትክክለኛ ያልሆነ ቁጥር።\n\nUsage: /add_user <Telegram_ID> <Balance>\nExample: /add_user 123456789 100")
 
 def format_order_message(order_data: dict) -> str:
     """Format order message for channel posting"""
