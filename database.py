@@ -7,7 +7,12 @@ class Database:
         self.client: Client = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
     
     def is_user_authorized(self, user_id: int) -> bool:
-        """Check if user is authorized"""
+        """Check if user is authorized (either in database or is admin)"""
+        # Check if user is admin first
+        if user_id in config.ADMIN_IDS:
+            return True
+        
+        # Otherwise check if user exists in database
         try:
             response = self.client.table('users').select('*').eq('telegram_id', user_id).execute()
             return len(response.data) > 0
@@ -35,8 +40,8 @@ class Database:
             print(f"Error updating user balance: {e}")
             return False
     
-    def add_user(self, telegram_id: int, name: str, initial_balance: float = 0.0) -> bool:
-        """Add new user"""
+    def add_user(self, telegram_id: int, name: str, initial_balance: float = 0.0) -> tuple[bool, str]:
+        """Add new user - returns (success, error_message)"""
         try:
             data = {
                 'telegram_id': telegram_id,
@@ -44,10 +49,11 @@ class Database:
                 'balance': initial_balance
             }
             response = self.client.table('users').insert(data).execute()
-            return True
+            return True, ""
         except Exception as e:
-            print(f"Error adding user: {e}")
-            return False
+            error_msg = str(e)
+            print(f"Error adding user: {error_msg}")
+            return False, error_msg
     
     def create_order(self, order_data: Dict) -> bool:
         """Create new order"""
@@ -68,6 +74,3 @@ class Database:
         except Exception as e:
             print(f"Error getting next order number: {e}")
             return 1000
-
-# Initialize database
-db = Database()
