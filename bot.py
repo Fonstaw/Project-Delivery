@@ -4,15 +4,11 @@ from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, 
     MessageHandler, filters, ContextTypes, ConversationHandler
 )
-from flask import request
 import config
 from database import Database
 db = Database()
 from utils import extract_numbers_from_text, validate_place_input, get_channel_for_order, format_order_preview
 from datetime import datetime
-import threading
-import os
-from flask import Flask
 
 # Enable logging
 logging.basicConfig(
@@ -459,74 +455,14 @@ def format_order_message(order_data: dict) -> str:
 
 ⏱ **ጊዜ:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
-def webhook_handler(flask_request):
-    """Handle incoming webhook requests"""
-    global bot_application
-    
-    if bot_application is None:
-        bot_application = setup_bot()
-    
-    try:
-        # Process the update
-        update = Update.de_json(flask_request.get_json(), bot_application.bot)
-        bot_application.process_update(update)
-        return 'OK'
-    except Exception as e:
-        logger.error(f"Error processing webhook: {e}")
-        return 'Error', 500
-
-def set_webhook():
-    """Set webhook URL for the bot (run this once)"""
-    import requests
-    
-    webhook_url = f"{config.APP_URL}/webhook"
-    url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/setWebhook"
-    
-    payload = {
-        "url": webhook_url,
-        "drop_pending_updates": True
-    }
-    
-    response = requests.post(url, json=payload)
-    logger.info(f"Webhook setup response: {response.json()}")
-
-def delete_webhook():
-    """Delete webhook (use if switching back to polling)"""
-    import requests
-    
-    url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/deleteWebhook"
-    response = requests.post(url)
-    logger.info(f"Webhook delete response: {response.json()}")
-
 # For backward compatibility - if you want to run with polling
 def run_polling():
     """Run the bot with polling (alternative to webhook)"""
     application = setup_bot()
     application.run_polling()
 
-# === START BOT: FLASK MAIN + POLLING BACKGROUND (RENDER-FREE FIX) ===
-app = Flask(__name__)
-
-# Health check route (Render pings this)
-@app.route('/health', methods=['GET'])
-def health():
-    return 'Bot is ALIVE! Polling active.', 200
-
-# Optional: Root route for your URL
-@app.route('/', methods=['GET'])
-def index():
-    return 'Campus Delivery Bot - Send /start in Telegram!'
-
+# === START THE BOT (POLLING MODE) ===
 if __name__ == "__main__":
-    # Start polling in background thread
-    def run_polling():
-        bot_app = setup_bot()
-        print("BOT IS RUNNING — SEND /start NOW!")
-        bot_app.run_polling()
-
-    polling_thread = threading.Thread(target=run_polling, daemon=True)
-    polling_thread.start()
-    
-    # Flask in main thread — binds to $PORT for Render
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app = setup_bot()
+    print("BOT STARTED — POLLING...")
+    app.run_polling()
