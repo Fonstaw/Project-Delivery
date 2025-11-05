@@ -10,6 +10,9 @@ from database import Database
 db = Database()
 from utils import extract_numbers_from_text, validate_place_input, get_channel_for_order, format_order_preview
 from datetime import datetime
+import threading
+import os
+from flask import Flask
 
 # Enable logging
 logging.basicConfig(
@@ -110,7 +113,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         "👋እንኳን ወደ ካምፓስ ዴሊቨሪ Bot በደህና መጡ።\n"
         "♥️እኛን ምርጫዎ ስላደረጉ ከልብ እናመሰግናለን።\n"
-        "🍕 እባኮን የአገልግሎት ምርጫዎን ከስር ይምረጡ።"
+        "🍕 እባኮ የአገልግሎት ምርጫዎን ከስር ይምረጡ።"
     )
     
     keyboard = [
@@ -501,9 +504,29 @@ def run_polling():
     application = setup_bot()
     application.run_polling()
 
-# === START THE BOT (POLLING MODE) ===
-if __name__ == "__main__":
-    app = setup_bot()
-    print("BOT STARTED — POLLING...")
-    app.run_polling()
+# === START BOT: FLASK MAIN + POLLING BACKGROUND (RENDER-FREE FIX) ===
+app = Flask(__name__)
 
+# Health check route (Render pings this)
+@app.route('/health', methods=['GET'])
+def health():
+    return 'Bot is ALIVE! Polling active.', 200
+
+# Optional: Root route for your URL
+@app.route('/', methods=['GET'])
+def index():
+    return 'Campus Delivery Bot - Send /start in Telegram!'
+
+if __name__ == "__main__":
+    # Start polling in background thread
+    def run_polling():
+        bot_app = setup_bot()
+        print("BOT IS RUNNING — SEND /start NOW!")
+        bot_app.run_polling()
+
+    polling_thread = threading.Thread(target=run_polling, daemon=True)
+    polling_thread.start()
+    
+    # Flask in main thread — binds to $PORT for Render
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
