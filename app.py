@@ -1,6 +1,4 @@
 import os
-import asyncio
-import threading
 import logging
 from flask import Flask
 
@@ -20,30 +18,23 @@ def home():
 def health():
     return "OK", 200
 
-def start_bot():
-    """Start the Telegram bot in polling mode with proper asyncio setup"""
-    try:
-        logging.info("🤖 Starting Telegram bot...")
-        
-        # Create a new event loop for this thread
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        from bot import setup_bot
-        bot_app = setup_bot()
-        logging.info("✅ Bot setup complete, starting polling...")
-        
-        # Run the bot in this thread's event loop
-        loop.run_until_complete(bot_app.run_polling())
-        
-    except Exception as e:
-        logging.error(f"❌ Bot failed to start: {e}")
-
-# Start the bot when the app loads (for Gunicorn)
-if not os.environ.get("WERKZEUG_RUN_MAIN"):  # This prevents double-starting in reloader
-    bot_thread = threading.Thread(target=start_bot, daemon=True)
+# Import and start bot directly in main process
+try:
+    logging.info("🤖 Starting Telegram bot...")
+    from bot import setup_bot
+    bot_app = setup_bot()
+    
+    # Start bot in background
+    import threading
+    def run_bot():
+        bot_app.run_polling()
+    
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
-    logging.info("🚀 Bot thread started!")
+    logging.info("✅ Bot started in background thread!")
+    
+except Exception as e:
+    logging.error(f"❌ Failed to start bot: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
