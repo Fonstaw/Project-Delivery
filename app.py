@@ -1,62 +1,48 @@
 import os
-import asyncio
-from flask import Flask, request
-from telegram import Update
+import logging
+from flask import Flask
 from bot import setup_bot
 from threading import Thread
-import logging
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-# Reduce httpx logging to WARNING to prevent bot token leakage in logs
+# Reduce httpx logging to WARNING
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 app = Flask(__name__)
-bot_application = None
-
-# Webhook route (for future)
-@app.post("/webhook")
-def webhook():
-    # Optional: Add secret token check later
-    
-    global bot_application
-    if bot_application is None:
-        bot_application = setup_bot()
-    
-    update_data = request.get_json()
-    update = Update.de_json(update_data, bot_application.bot)
-    # Process update synchronously using asyncio
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(bot_application.process_update(update))
-    finally:
-        loop.close()
-        
-    return "OK"
 
 # Health check routes
 @app.route('/')
 def index():
-    return "Bot is alive! 🚀"
+    return "Campus Delivery Bot is alive! 🚀"
 
 @app.route('/health')
 def health():
     return "OK", 200
 
-# Run Flask in background
+# Run Flask server
 def run_flask():
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, use_reloader=False)
 
+def run_bot():
+    """Run the bot in polling mode"""
+    try:
+        bot_application = setup_bot()
+        print("🤖 BOT STARTED — POLLING MODE ACTIVE")
+        bot_application.run_polling()
+    except Exception as e:
+        print(f"❌ Bot failed to start: {e}")
+
 if __name__ == "__main__":
-    # Start Flask in a thread
-    flask_thread = Thread(target=run_flask, daemon=True)
-    flask_thread.start()
+    print("🚀 Starting Campus Delivery Bot System...")
     
-    # Run bot polling in main thread
-    bot_application = setup_bot()
-    print("BOT STARTED — POLLING MODE")
-    bot_application.run_polling()
+    # Start bot in main thread (polling needs to be in main thread)
+    bot_thread = Thread(target=run_bot, daemon=False)
+    bot_thread.start()
+    
+    # Start Flask in main thread (Koyeb needs web server in main thread)
+    print("🌐 Starting Flask web server...")
+    run_flask()
