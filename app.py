@@ -1,12 +1,11 @@
 import os
 import asyncio
-from flask import Flask
-from bot import Application as application  # ← Grab the real one!
 from flask import Flask, request
 from telegram import Update
 from bot import setup_bot
 from threading import Thread
 import logging
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -16,6 +15,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 app = Flask(__name__)
 bot_application = None
+
 # Webhook route (for future)
 @app.post("/webhook")
 def webhook():
@@ -36,22 +36,27 @@ def webhook():
         loop.close()
         
     return "OK"
-# Health check
--5
-+7
+
+# Health check routes
+@app.route('/')
 def index():
     return "Bot is alive! 🚀"
+
+@app.route('/health')
+def health():
+    return "OK", 200
 
 # Run Flask in background
 def run_flask():
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, use_reloader=False)
+
 if __name__ == "__main__":
-    
-# Start Flask in a thread
+    # Start Flask in a thread
     flask_thread = Thread(target=run_flask, daemon=True)
     flask_thread.start()
     
     # Run bot polling in main thread
     bot_application = setup_bot()
+    print("BOT STARTED — POLLING MODE")
     bot_application.run_polling()
