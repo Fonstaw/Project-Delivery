@@ -462,7 +462,3 @@ def run_polling():
     application.run_polling()
 
 # === START THE BOT (POLLING MODE) ===
-if __name__ == "__main__":
-    app = setup_bot()
-    print("BOT STARTED — POLLING...")
-    app.run_polling()
