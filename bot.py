@@ -456,9 +456,14 @@ def format_order_message(order_data: dict) -> str:
 ⏱ **ጊዜ:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
 # For backward compatibility - if you want to run with polling
-def run_polling():
-    """Run the bot with polling (alternative to webhook)"""
-    application = setup_bot()
-    application.run_polling()
+def setup_bot():
+    """Setup and return the bot application"""
+    bot_application = Application.builder().token(config.BOT_TOKEN).build()
+    setup_handlers(bot_application)
+    return bot_application
 
+if __name__ == "__main__":
+    print("🚀 Starting Campus Delivery Bot...")
+    bot_app = setup_bot()
+    bot_app.run_polling()
 # === START THE BOT (POLLING MODE) ===
