@@ -1,4 +1,5 @@
 import os
+import asyncio
 import threading
 import logging
 from flask import Flask
@@ -20,14 +21,20 @@ def health():
     return "OK", 200
 
 def start_bot():
-    """Start the Telegram bot in polling mode"""
+    """Start the Telegram bot in polling mode with proper asyncio setup"""
     try:
         logging.info("🤖 Starting Telegram bot...")
-        from bot import setup_bot
         
+        # Create a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        from bot import setup_bot
         bot_app = setup_bot()
         logging.info("✅ Bot setup complete, starting polling...")
-        bot_app.run_polling()
+        
+        # Run the bot in this thread's event loop
+        loop.run_until_complete(bot_app.run_polling())
         
     except Exception as e:
         logging.error(f"❌ Bot failed to start: {e}")
